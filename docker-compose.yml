@@ -1,4 +1,13 @@
 services:
+  apache:
+    image: httpd:2.4
+    container_name: apache_reverse_proxy
+    ports:
+      - "3000:80"
+    volumes:
+      - ./apache-config:/usr/local/apache2/conf
+    restart: unless-stopped
+
   php:
     build:
       context: ./server
