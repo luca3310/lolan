@@ -12,18 +12,18 @@ services:
       - db
 
   db:
-    image: mysql:8.0
+    image: mysql/mysql-server:8.0
     container_name: mysql_server
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_password # Root user password
       MYSQL_DATABASE: my_database # Default database to create
       MYSQL_USER: user # Non-root user
       MYSQL_PASSWORD: user_password # Password for the non-root user
+    platform: linux/amd64 # Specify platform
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
-
 volumes:
   db_data:
