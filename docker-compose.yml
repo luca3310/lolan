@@ -1,0 +1,29 @@
+services:
+  php:
+    build:
+      context: ./server
+    container_name: php_server
+    ports:
+      - "4900:80"
+    volumes:
+      - ./server:/var/www/html
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_server
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password # Root user password
+      MYSQL_DATABASE: my_database # Default database to create
+      MYSQL_USER: user # Non-root user
+      MYSQL_PASSWORD: user_password # Password for the non-root user
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  db_data:
