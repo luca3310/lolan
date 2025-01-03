@@ -1,36 +1,17 @@
-services:
-  apache:
-    image: httpd:2.4
-    container_name: apache_reverse_proxy
-    ports:
-      - "3000:80"
-    volumes:
-      - ./apache-config:/usr/local/apache2/conf
-    restart: unless-stopped
+version: "3.8"
 
+services:
   php:
     build:
       context: ./server
     container_name: php_server
-    ports:
-      - "4900:80"
+    expose:
+      - "80"
     volumes:
       - ./server:/var/www/html
     restart: unless-stopped
     depends_on:
       - db
-
-  client:
-    build:
-      context: ./client
-    container_name: nextjs_client
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./client:/app
-    working_dir: /app
-    command: "npm run dev"
-    restart: unless-stopped
 
   db:
     image: mysql/mysql-server:8.0
@@ -38,13 +19,37 @@ services:
     ports:
       - "3307:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root_password # Root user password
-      MYSQL_DATABASE: my_database # Default database to create
-      MYSQL_USER: user # Non-root user
-      MYSQL_PASSWORD: user_password # Password for the non-root user
-    platform: linux/amd64 # Specify platform
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    platform: linux/amd64
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+    container_name: nextjs_client
+    expose:
+      - "3000"
+    volumes:
+      - ./client:/app
+    working_dir: /app
+    command: "npm run dev"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_reverse_proxy
+    depends_on:
+      - client
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
 volumes:
   db_data:

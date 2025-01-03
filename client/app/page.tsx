@@ -1,3 +1,25 @@
+"use client";
+
+import { useEffect } from "react";
+
 export default function Home() {
-    return <h1>hellodsaod</h1>;
+  useEffect(() => {
+    const fethcer = async () => {
+      console.log("reset");
+      try {
+        const res = await fetch("/api");
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        console.log(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fethcer();
+  }, []);
+
+  return <h1>hellodsaod</h1>;
 }
