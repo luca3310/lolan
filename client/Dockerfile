@@ -2,14 +2,16 @@ FROM node:18
 
 WORKDIR /app
 
+# Kopier package.json og package-lock.json først
 COPY package*.json ./
+
+# Installer dependencies
 RUN npm install
 
+# Kopier resten af filerne
 COPY . .
-
-# Build for production
-RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# Start applikationen i development mode
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]

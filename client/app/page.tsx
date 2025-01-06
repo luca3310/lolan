@@ -4,21 +4,21 @@ import { useEffect } from "react";
 
 export default function Home() {
   useEffect(() => {
-    const fethcer = async () => {
-      console.log("reset");
+    const fetcher = async () => {
       try {
         const res = await fetch("/api");
         if (!res.ok) {
+          console.log("API fejl:", res.status);
           return;
         }
         const data = await res.json();
-        console.log(data);
+        console.log("API svar:", data);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch fejl:", err);
       }
     };
 
-    fethcer();
+    fetcher();
   }, []);
 
   return <h1>hellodsaod</h1>;
