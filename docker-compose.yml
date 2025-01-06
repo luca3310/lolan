@@ -11,7 +11,8 @@ services:
       - ./server:/var/www/html
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: mysql/mysql-server:8.0
@@ -26,6 +27,7 @@ services:
     platform: linux/amd64
     volumes:
       - db_data:/var/lib/mysql
+      - ./server/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     restart: unless-stopped
 
   client:
