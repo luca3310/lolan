@@ -4,13 +4,8 @@
  *
  * Endpoint to fetch ONLY the titles from
  * the 'posts' table using PDO. It respects optional
- * 'limit' and 'search' query parameters and requires
- * a valid Bearer token for authentication.
+ * 'limit' and 'search' query parameters.
  **********************************************/
-
-// Include the authentication component
-require_once '../libs/bearerChecker.php';
-requireBearerAuth('password');    // Use "password" as the expected token
 
 // 1. Database connection info (Docker Compose environment)
 $dsn     = "mysql:host=db;port=3306;dbname=my_database;charset=utf8mb4";
@@ -51,8 +46,8 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         $stmt->execute();
         $total = $stmt->fetch()['total'];
 
-        // Pagination
-        $per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        // Pagination med fast antal per side
+        $per_page = 10; // Fast grænse på 5 posts per side
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $per_page;
 
@@ -60,7 +55,31 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         if (count($conditions) > 0) {
             $sql .= " WHERE " . implode(" AND ", $conditions);
         }
-        $sql .= " ORDER BY id DESC LIMIT :limit OFFSET :offset";
+        $sql .= " ORDER BY id DESC";
+
+        if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
+            $limit = (int)$_GET['limit'];
+            if ($limit > 0) {
+                $sql .= " LIMIT " . $limit;
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value, PDO::PARAM_STR);
+                }
+                $stmt->execute();
+                $titles = $stmt->fetchAll();
+                
+                $response = [
+                    'data' => $titles
+                ];
+                
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($response);
+                exit;
+            }
+        }
+
+        // Hvis ingen limit er angivet, brug pagination
+        $sql .= " LIMIT :limit OFFSET :offset";
 
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
