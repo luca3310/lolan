@@ -14,10 +14,7 @@ curl -X GET "http://localhost/api/posts/getPosts/?page=1&search=post&limit=5"
 
 ```bash
 # Hent post med ID 1
-curl -X GET "http://localhost/api/posts/getPost/" \
-  -H "Authorization: Bearer password" \
-  -G \
-  -d "id=1"
+curl -X GET "http://localhost/api/posts/getPost/"
 ```
 
 ## 3. Opret ny post (POST)
