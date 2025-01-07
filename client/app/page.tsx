@@ -6,7 +6,7 @@ export default function Home() {
   useEffect(() => {
     const fetcher = async () => {
       try {
-        const res = await fetch("/api");
+        const res = await fetch("/api/getMetodes/getPosts.php");
         if (!res.ok) {
           console.log("API fejl:", res.status);
           return;
