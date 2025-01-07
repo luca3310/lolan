@@ -9,7 +9,7 @@
  **********************************************/
 
 // Include the authentication component
-require_once '../libs/bearerChecker.php';
+require_once '../../libs/bearerChecker.php';
 requireBearerAuth('password');   
 
 // 1. Database connection info (Docker Compose environment)
