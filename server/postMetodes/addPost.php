@@ -7,6 +7,10 @@
  * matching the new schema (title, content).
  **********************************************/
 
+// Include the authentication component
+require_once '../libs/bearerChecker.php';
+requireBearerAuth('password');   
+
 // 1. Database connection info: match Docker Compose environment
 $dsn      = "mysql:host=db;port=3306;dbname=my_database;charset=utf8mb4";
 $db_user  = "user";
@@ -51,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // 3b. Simple validation checks
     if (empty($title) || empty($content)) {
         http_response_code(400);
-        echo json_encode(["error" => "Both 'title' and 'content' are required."]);
+        echo json_encode(["error" => "Both 'title' and 'content' are required in body."]);
         exit;
     }
 
