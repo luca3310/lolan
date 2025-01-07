@@ -32,7 +32,7 @@ try {
 // 2. We only want GET requests
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
     try {
-        $sql = "SELECT title FROM posts";
+        $sql = "SELECT COUNT(*) as total FROM posts";
         $conditions = [];
         $params = [];
 
@@ -44,17 +44,27 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         if (count($conditions) > 0) {
             $sql .= " WHERE " . implode(" AND ", $conditions);
         }
-
-        $sql .= " ORDER BY id DESC";
-
-        if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
-            $limit = (int)$_GET['limit'];
-            if ($limit > 0) {
-                $sql .= " LIMIT " . $limit;
-            }
+        $stmt = $pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_STR);
         }
+        $stmt->execute();
+        $total = $stmt->fetch()['total'];
+
+        // Pagination
+        $per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $per_page;
+
+        $sql = "SELECT title, id FROM posts";
+        if (count($conditions) > 0) {
+            $sql .= " WHERE " . implode(" AND ", $conditions);
+        }
+        $sql .= " ORDER BY id DESC LIMIT :limit OFFSET :offset";
 
         $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value, PDO::PARAM_STR);
         }
@@ -62,8 +72,26 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
 
         $titles = $stmt->fetchAll();
 
+        $total_pages = ceil($total / $per_page);
+        $has_next = $page < $total_pages;
+        $has_previous = $page > 1;
+
+        $response = [
+            'data' => $titles,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $total_pages,
+                'total_items' => $total,
+                'per_page' => $per_page,
+                'has_next' => $has_next,
+                'has_previous' => $has_previous,
+                'next_page' => $has_next ? $page + 1 : null,
+                'previous_page' => $has_previous ? $page - 1 : null
+            ]
+        ];
+
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($titles);
+        echo json_encode($response);
 
     } catch (PDOException $e) {
         http_response_code(500);
