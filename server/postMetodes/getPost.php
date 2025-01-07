@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // 12. Success response with 'title' and 'content'
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
-                "url"     => "http://localhost/api/getMetodes/getPosts.php"
+                "url"     => "http://localhost/api/getMetodes/getPosts.php",
                 "id"      => $id,
                 "title"   => $post['title'],
                 "content" => $post['content']
