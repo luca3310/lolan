@@ -96,6 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         $has_previous = $page > 1;
 
         $response = [
+            'url' => "http://localhost/api/postMetodes/getPost.php"
             'data' => $titles,
             'pagination' => [
                 'current_page' => $page,
