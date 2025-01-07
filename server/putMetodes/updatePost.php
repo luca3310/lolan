@@ -7,6 +7,10 @@
  * It expects 'id', 'title', and 'content' in the request body.
  **********************************************/
 
+// Include the authentication component
+require_once '../libs/bearerChecker.php';
+requireBearerAuth('password');   
+
 // 1. Database connection info (Docker Compose environment)
 $dsn      = "mysql:host=db;port=3306;dbname=my_database;charset=utf8mb4";
 $db_user  = "user";
