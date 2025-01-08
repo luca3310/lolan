@@ -90,14 +90,41 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         $stmt->execute();
 
         $titles = $stmt->fetchAll();
+        
+        // Tilføj link til hver post
+        $posts_with_links = array_map(function($post) {
+            return [
+                'title' => $post['title'],
+                'id' => $post['id'],
+                'link' => "http://localhost/api/posts/getPost/?id=" . $post['id']
+            ];
+        }, $titles);
 
         $total_pages = ceil($total / $per_page);
         $has_next = $page < $total_pages;
         $has_previous = $page > 1;
 
+        // Byg basis URL
+        $base_url = "http://localhost/api/posts/getPosts/";
+        
+        // Tilføj søgeparameter hvis det findes
+        $url_params = [];
+        if (isset($_GET['search']) && !empty($_GET['search'])) {
+            $url_params['search'] = $_GET['search'];
+        }
+        if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
+            $url_params['limit'] = (int)$_GET['limit'];
+        }
+
+        // Funktion til at bygge URL med parametre
+        function buildUrl($base, $params, $page) {
+            $params['page'] = $page;
+            return $base . '?' . http_build_query($params);
+        }
+
         $response = [
-            'url' => "http://localhost/posts/getPost",
-            'data' => $titles,
+            'url' => "http://localhost/api/posts/getPost",
+            'data' => $posts_with_links,
             'pagination' => [
                 'current_page' => $page,
                 'total_pages' => $total_pages,
@@ -105,8 +132,8 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
                 'per_page' => $per_page,
                 'has_next' => $has_next,
                 'has_previous' => $has_previous,
-                'next_page' => $has_next ? $page + 1 : null,
-                'previous_page' => $has_previous ? $page - 1 : null
+                'next_page' => $has_next ? buildUrl($base_url, $url_params, $page + 1) : null,
+                'previous_page' => $has_previous ? buildUrl($base_url, $url_params, $page - 1) : null
             ]
         ];
 
