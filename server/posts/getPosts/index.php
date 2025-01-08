@@ -27,6 +27,7 @@ try {
 // 2. We only want GET requests
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
     try {
+        // Count total posts based on search criteria (if any)
         $sql = "SELECT COUNT(*) as total FROM posts";
         $conditions = [];
         $params = [];
@@ -46,39 +47,27 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         $stmt->execute();
         $total = $stmt->fetch()['total'];
 
-        // Pagination med fast antal per side
-        $per_page = 10; // Fast grænse på 5 posts per side
+        // Set default items per page
+        $per_page = 10; 
+
+        // If a 'limit' parameter is provided, update $per_page
+        if (isset($_GET['limit']) && is_numeric($_GET['limit']) && (int)$_GET['limit'] > 0) {
+            $per_page = (int)$_GET['limit'];
+        }
+
+        // Determine current page and calculate offset
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if($page < 1) {
+            $page = 1;
+        }
         $offset = ($page - 1) * $per_page;
 
+        // Build the query to fetch posts
         $sql = "SELECT title, id FROM posts";
         if (count($conditions) > 0) {
             $sql .= " WHERE " . implode(" AND ", $conditions);
         }
         $sql .= " ORDER BY id DESC";
-
-        if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
-            $limit = (int)$_GET['limit'];
-            if ($limit > 0) {
-                $sql .= " LIMIT " . $limit;
-                $stmt = $pdo->prepare($sql);
-                foreach ($params as $key => $value) {
-                    $stmt->bindValue($key, $value, PDO::PARAM_STR);
-                }
-                $stmt->execute();
-                $titles = $stmt->fetchAll();
-                
-                $response = [
-                    'data' => $titles
-                ];
-                
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode($response);
-                exit;
-            }
-        }
-
-        // Hvis ingen limit er angivet, brug pagination
         $sql .= " LIMIT :limit OFFSET :offset";
 
         $stmt = $pdo->prepare($sql);
@@ -90,24 +79,24 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         $stmt->execute();
 
         $titles = $stmt->fetchAll();
-        
-        // Tilføj link til hver post
+
+        // Add link to each post
         $posts_with_links = array_map(function($post) {
             return [
                 'title' => $post['title'],
-                'id' => $post['id'],
-                'link' => "http://localhost/api/posts/getPost/?id=" . $post['id']
+                'id'    => $post['id'],
+                'link'  => "http://localhost/api/posts/getPost/?id=" . $post['id']
             ];
         }, $titles);
 
-        $total_pages = ceil($total / $per_page);
-        $has_next = $page < $total_pages;
-        $has_previous = $page > 1;
+        $total_pages   = ceil($total / $per_page);
+        $has_next      = $page < $total_pages;
+        $has_previous  = $page > 1;
 
-        // Byg basis URL
+        // Base URL for pagination links
         $base_url = "http://localhost/api/posts/getPosts/";
-        
-        // Tilføj søgeparameter hvis det findes
+
+        // Collect URL parameters to maintain search and limit state
         $url_params = [];
         if (isset($_GET['search']) && !empty($_GET['search'])) {
             $url_params['search'] = $_GET['search'];
@@ -116,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
             $url_params['limit'] = (int)$_GET['limit'];
         }
 
-        // Funktion til at bygge URL med parametre
+        // Helper function to build pagination URLs
         function buildUrl($base, $params, $page) {
             $params['page'] = $page;
             return $base . '?' . http_build_query($params);
@@ -126,13 +115,13 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
             'url' => "http://localhost/api/posts/getPost",
             'data' => $posts_with_links,
             'pagination' => [
-                'current_page' => $page,
-                'total_pages' => $total_pages,
-                'total_items' => $total,
-                'per_page' => $per_page,
-                'has_next' => $has_next,
-                'has_previous' => $has_previous,
-                'next_page' => $has_next ? buildUrl($base_url, $url_params, $page + 1) : null,
+                'current_page'  => $page,
+                'total_pages'   => $total_pages,
+                'total_items'   => $total,
+                'per_page'      => $per_page,
+                'has_next'      => $has_next,
+                'has_previous'  => $has_previous,
+                'next_page'     => $has_next ? buildUrl($base_url, $url_params, $page + 1) : null,
                 'previous_page' => $has_previous ? buildUrl($base_url, $url_params, $page - 1) : null
             ]
         ];
