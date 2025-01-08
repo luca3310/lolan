@@ -41,7 +41,22 @@ function updatePost($pdo) {
         $stmt->execute();
         
         if ($stmt->rowCount() > 0) {
-            echo json_encode(["message" => "Post opdateret succesfuldt."]);
+            // Hent den opdaterede post
+            $stmt = $pdo->prepare("SELECT id, title, content FROM posts WHERE id = :id");
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            $updatedPost = $stmt->fetch();
+
+            http_response_code(200);
+            echo json_encode([
+                "next" => "/api/posts/?id=" . $id,
+                "message" => "Post opdateret succesfuldt.",
+                "post" => [
+                    "id" => $updatedPost['id'],
+                    "title" => $updatedPost['title'],
+                    "content" => $updatedPost['content']
+                ]
+            ]);
         } else {
             http_response_code(404);
             echo json_encode(["error" => "Ingen post fundet med ID $id."]);

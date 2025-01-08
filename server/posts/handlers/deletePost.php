@@ -14,7 +14,7 @@ function deletePost($pdo) {
         $stmt->execute();
         
         if ($stmt->rowCount() > 0) {
-            echo json_encode(["message" => "Post slettet succesfuldt."]);
+            http_response_code(204);
         } else {
             http_response_code(404);
             echo json_encode(["error" => "Ingen post fundet med ID $id."]);

@@ -57,10 +57,22 @@ function patchPost($pdo) {
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':content', $content, PDO::PARAM_STR);
         $stmt->execute();
+
+        // Hent den opdaterede post
+        $stmt = $pdo->prepare("SELECT id, title, content FROM posts WHERE id = :id");
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $updatedPost = $stmt->fetch();
         
+        http_response_code(200);
         echo json_encode([
+            "next" => "/api/posts/?id=" . $id,
             "message" => "Post indhold opdateret succesfuldt.",
-            "id" => $id
+            "post" => [
+                "id" => $updatedPost['id'],
+                "title" => $updatedPost['title'],
+                "content" => $updatedPost['content']
+            ]
         ]);
     } catch (PDOException $e) {
         http_response_code(500);

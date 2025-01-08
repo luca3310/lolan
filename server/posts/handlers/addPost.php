@@ -32,11 +32,24 @@ function addPost($pdo) {
         $stmt->execute();
         
         $insertedId = $pdo->lastInsertId();
+
+        // Hent den nyoprettede post
+        $stmt = $pdo->prepare("SELECT id, title, content FROM posts WHERE id = :id");
+        $stmt->bindValue(':id', $insertedId, PDO::PARAM_INT);
+        $stmt->execute();
+        $newPost = $stmt->fetch();
         
+        http_response_code(201);
         header('Content-Type: application/json; charset=utf-8');
+        header('Location: /api/posts/?id=' . $insertedId);
         echo json_encode([
+            "next" => "/api/posts/?id=" . $insertedId,
             "message" => "Post oprettet succesfuldt.",
-            "id" => $insertedId
+            "post" => [
+                "id" => $newPost['id'],
+                "title" => $newPost['title'],
+                "content" => $newPost['content']
+            ]
         ]);
     } catch (PDOException $e) {
         http_response_code(500);
