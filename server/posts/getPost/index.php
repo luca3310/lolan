@@ -57,6 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
             // 8. Success response with 'title' and 'content'
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
+                "prev"    => "http://localhost/api/posts/getPosts/",
                 "id"      => $id,
                 "title"   => $post['title'],
                 "content" => $post['content']
